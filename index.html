@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DropSure - Income Protection</title>
+  
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Custom CSS for hiding the scrollbar -->
+  <style>
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .hide-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+
+  <!-- Babel to compile React JSX in the browser -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+  <!-- This is where the React app will be rendered -->
+  <div id="root"></div>
+
+  <!-- The React App Code -->
+  <script type="text/babel" data-type="module">
+    // Import React and ReactDOM directly via ESM CDN
+    import React, { useState, useEffect } from 'https://esm.sh/react@18.2.0';
+    import { createRoot } from 'https://esm.sh/react-dom@18.2.0/client';
+    
+    // Import all required icons from Lucide via ESM CDN
+    import { 
+      Home, Activity, User, Bell, CloudRain, ShieldCheck, AlertTriangle, 
+      CheckCircle, Navigation, Wind, IndianRupee, Clock, ChevronRight, 
+      Zap, MapPin, Car, Smartphone, Lock, ArrowLeft, Shield, FileText, 
+      Fingerprint, ShoppingBag, Check 
+    } from 'https://esm.sh/lucide-react@0.292.0';
+
+    // --- MAIN APP COMPONENT ---
+    function App() {
+      const [isAuthenticated, setIsAuthenticated] = useState(false);
+      const [activeTab, setActiveTab] = useState('home');
+      const [appState, setAppState] = useState('idle'); // idle, alerting, success
+      const [activeTrigger, setActiveTrigger] = useState(null); // 'rain' or 'aqi'
+      
+      // Dynamic user state
+      const [user, setUser] = useState({
+        name: 'Ravi',
+        phone: '9876543210',
+        platform: 'Blinkit',
+        plan: 'Rakshak'
+      });
+
+      // Simulate the automated trigger for the hackathon demo
+      const triggerDisruption = (type) => {
+        setActiveTrigger(type);
+        setAppState('alerting');
+      };
+
+      const resetState = () => {
+        setAppState('idle');
+        setActiveTrigger(null);
+      };
+
+      const handleLogout = () => {
+        setIsAuthenticated(false);
+        setActiveTab('home');
+        setAppState('idle');
+      };
+
+      return (
+        <div className="min-h-screen bg-[#E2E8F0] flex items-center justify-center font-sans">
+          {/* Mobile Device Simulator Container */}
+          <div className="w-full max-w-[400px] h-[100dvh] max-h-[850px] bg-[#F8FAFC] sm:rounded-[40px] shadow-2xl relative overflow-hidden flex flex-col sm:border-[8px] border-gray-900">
+            
+            {/* Dynamic App Content */}
+            <div className={`flex-1 overflow-y-auto hide-scrollbar ${isAuthenticated ? 'pb-24' : ''}`}>
+              {!isAuthenticated ? (
+                <LoginScreen onLogin={(userData) => {
+                  if (userData) setUser(userData);
+                  setIsAuthenticated(true);
+                }} />
+              ) : (
+                <>
+                  {appState === 'idle' && activeTab === 'home' && <HomeTab user={user} onTrigger={triggerDisruption} />}
+                  {appState === 'idle' && activeTab === 'activity' && <ActivityTab user={user} />}
+                  {appState === 'idle' && activeTab === 'plans' && <PlansTab user={user} />}
+                  {appState === 'idle' && activeTab === 'profile' && <ProfileTab user={user} onLogout={handleLogout} />}
+                </>
+              )}
+            </div>
+
+            {/* Bottom Navigation Bar */}
+            {isAuthenticated && appState === 'idle' && (
+              <div className="absolute bottom-0 w-full bg-white/80 backdrop-blur-lg border-t border-gray-200 flex justify-around items-center p-4 pb-6 z-40 animate-in slide-in-from-bottom-full duration-500">
+                <NavItem 
+                  icon={<Home size={24} />} 
+                  label="Home" 
+                  active={activeTab === 'home'} 
+                  onClick={() => setActiveTab('home')} 
+                />
+                <NavItem 
+                  icon={<Activity size={24} />} 
+                  label="Live" 
+                  active={activeTab === 'activity'} 
+                  onClick={() => setActiveTab('activity')} 
+                />
+                <NavItem 
+                  icon={<Shield size={24} />} 
+                  label="Plans" 
+                  active={activeTab === 'plans'} 
+                  onClick={() => setActiveTab('plans')} 
+                />
+                <NavItem 
+                  icon={<User size={24} />} 
+                  label="Profile" 
+                  active={activeTab === 'profile'} 
+                  onClick={() => setActiveTab('profile')} 
+                />
+              </div>
+            )}
+
+            {/* Overlays for Automated Triggers */}
+            {appState === 'alerting' && <AlertModal triggerType={activeTrigger} onComplete={() => setAppState('success')} />}
+            {appState === 'success' && <SuccessScreen triggerType={activeTrigger} onReset={resetState} />}
+            
+          </div>
+        </div>
+      );
+    }
+
+    // --- AUTHENTICATION COMPONENTS ---
+
+    function LoginScreen({ onLogin }) {
+      const [authMode, setAuthMode] = useState('login'); // 'login' or 'signup'
+      const [step, setStep] = useState('phone'); // 'phone', 'details', 'otp', 'plans', 'payment'
+      
+      // Form State
+      const [phone, setPhone] = useState('');
+      const [name, setName] = useState('');
+      const [platform, setPlatform] = useState('Blinkit');
+      const [selectedPlan, setSelectedPlan] = useState('Rakshak');
+      const [otp, setOtp] = useState('');
+      
+      const [error, setError] = useState('');
+      const [isLoading, setIsLoading] = useState(false);
+      const [paymentStatus, setPaymentStatus] = useState('processing'); // 'processing', 'success'
+
+      const handlePhoneSubmit = (e) => {
+        e.preventDefault();
+        setError('');
+        const phoneRegex = /^[0-9]{10}$/;
+        if (!phoneRegex.test(phone)) {
+          setError('Please enter a valid 10-digit mobile number.');
+          return;
+        }
+        setIsLoading(true);
+        setTimeout(() => {
+          setIsLoading(false);
+          setStep('otp');
+        }, 1000);
+      };
+
+      const handleSignupDetailsSubmit = (e) => {
+        e.preventDefault();
+        setError('');
+        if (!name.trim()) {
+          setError('Please enter your full name.');
+          return;
+        }
+        const phoneRegex = /^[0-9]{10}$/;
+        if (!phoneRegex.test(phone)) {
+          setError('Please enter a valid 10-digit mobile number.');
+          return;
+        }
+        setIsLoading(true);
+        setTimeout(() => {
+          setIsLoading(false);
+          setStep('otp');
+        }, 1000);
+      };
+
+      const handleOtpSubmit = (e) => {
+        e.preventDefault();
+        setError('');
+        if (otp.length !== 4) {
+          setError('Please enter the 4-digit OTP.');
+          return;
+        }
+        setIsLoading(true);
+        setTimeout(() => {
+          setIsLoading(false);
+          if (otp === '1234') {
+            if (authMode === 'signup') {
+              setStep('plans');
+            } else {
+              onLogin({ name: 'Ravi', phone, platform: 'Blinkit', plan: 'Rakshak' }); // Default for existing users
+            }
+          } else {
+            setError('Invalid OTP. Hint: Use 1234.');
+          }
+        }, 1200);
+      };
+
+      const handlePlanSelection = (planName) => {
+        setSelectedPlan(planName);
+      };
+
+      const processPayment = () => {
+        setStep('payment');
+        setPaymentStatus('processing');
+        setTimeout(() => {
+          setPaymentStatus('success');
+          setTimeout(() => {
+            onLogin({ name, phone, platform, plan: selectedPlan });
+          }, 1500); // Redirect to dashboard after success
+        }, 2500);
+      };
+
+      return (
+        <div className="h-full flex flex-col bg-[#0A2540] text-white p-6 relative overflow-y-auto hide-scrollbar animate-in fade-in duration-500">
+          <div className="absolute top-[-10%] right-[-10%] w-64 h-64 bg-[#00D4FF] rounded-full blur-[100px] opacity-20 pointer-events-none"></div>
+          
+          {step !== 'plans' && step !== 'payment' && (
+            <div className="mt-12 mb-8 relative z-10">
+              <div className="flex items-center mb-4">
+                <ShieldCheck size={36} className="text-[#00D4FF] mr-3" />
+                <h1 className="text-3xl font-bold tracking-tight">DropSure</h1>
+              </div>
+              <p className="text-slate-400 text-lg">Income Protection for <br/><span className="text-white font-semibold">Q-Commerce Partners.</span></p>
+            </div>
+          )}
+
+          <div className={`flex-1 flex flex-col justify-center relative z-10 ${step === 'plans' ? 'pt-8' : ''}`}>
+            <div className="bg-white/10 backdrop-blur-md p-6 rounded-[32px] border border-white/10 shadow-xl">
+              
+              {/* LOGIN FLOW - PHONE STEP */}
+              {authMode === 'login' && step === 'phone' && (
+                <form onSubmit={handlePhoneSubmit} className="animate-in slide-in-from-right-8 duration-300">
+                  <h2 className="text-xl font-bold mb-2">Welcome Back</h2>
+                  <p className="text-sm text-slate-400 mb-6">Enter your registered mobile number to continue.</p>
+                  
+                  <div className="mb-4">
+                    <div className="flex items-center bg-[#0A2540]/50 border border-slate-600 rounded-2xl p-4 focus-within:border-[#00D4FF] transition-colors">
+                      <Smartphone size={20} className="text-slate-400 mr-3" />
+                      <span className="text-slate-400 mr-2 border-r border-slate-600 pr-2">+91</span>
+                      <input 
+                        type="tel" 
+                        placeholder="Mobile Number"
+                        className="bg-transparent border-none outline-none text-white w-full placeholder-slate-500"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                        maxLength={10}
+                      />
+                    </div>
+                    {error && <p className="text-red-400 text-xs mt-2 ml-2 flex items-center"><AlertTriangle size={12} className="mr-1"/>{error}</p>}
+                  </div>
+
+                  <button type="submit" disabled={isLoading} className="w-full bg-gradient-to-r from-[#00D4FF] to-[#00A3FF] text-[#0A2540] font-bold text-lg py-4 rounded-2xl shadow-lg shadow-[#00D4FF]/20 flex items-center justify-center transition-transform active:scale-95 disabled:opacity-70 mt-6 mb-4">
+                    {isLoading ? <div className="w-6 h-6 border-2 border-[#0A2540] border-t-transparent rounded-full animate-spin"></div> : 'Send OTP'}
+                  </button>
+                  
+                  <p className="text-center text-sm text-slate-400">
+                    New to DropSure? <button type="button" onClick={() => { setAuthMode('signup'); setStep('details'); setError(''); }} className="text-[#00D4FF] font-bold underline">Sign Up</button>
+                  </p>
+                </form>
+              )}
+
+              {/* SIGNUP FLOW - DETAILS STEP */}
+              {authMode === 'signup' && step === 'details' && (
+                <form onSubmit={handleSignupDetailsSubmit} className="animate-in slide-in-from-right-8 duration-300">
+                  <h2 className="text-xl font-bold mb-2">Create Account</h2>
+                  <p className="text-sm text-slate-400 mb-6">Register to protect your weekly earnings.</p>
+                  
+                  <div className="space-y-4 mb-6">
+                    <div>
+                      <div className="flex items-center bg-[#0A2540]/50 border border-slate-600 rounded-2xl p-4 focus-within:border-[#00D4FF] transition-colors">
+                        <User size={20} className="text-slate-400 mr-3" />
+                        <input 
+                          type="text" 
+                          placeholder="Full Name"
+                          className="bg-transparent border-none outline-none text-white w-full placeholder-slate-500"
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="flex items-center bg-[#0A2540]/50 border border-slate-600 rounded-2xl p-4 focus-within:border-[#00D4FF] transition-colors">
+                        <Smartphone size={20} className="text-slate-400 mr-3" />
+                        <span className="text-slate-400 mr-2 border-r border-slate-600 pr-2">+91</span>
+                        <input 
+                          type="tel" 
+                          placeholder="Mobile Number"
+                          className="bg-transparent border-none outline-none text-white w-full placeholder-slate-500"
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                          maxLength={10}
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <p className="text-sm text-slate-400 mb-2 ml-1">Select your platform:</p>
+                      <div className="grid grid-cols-2 gap-3">
+                        <button 
+                          type="button"
+                          onClick={() => setPlatform('Blinkit')}
+                          className={`py-3 rounded-xl border flex items-center justify-center transition-colors ${platform === 'Blinkit' ? 'bg-[#F5CB13]/20 border-[#F5CB13] text-[#F5CB13] font-bold' : 'bg-[#0A2540]/50 border-slate-600 text-slate-400'}`}
+                        >
+                          <ShoppingBag size={16} className="mr-2" /> Blinkit
+                        </button>
+                        <button 
+                          type="button"
+                          onClick={() => setPlatform('Zepto')}
+                          className={`py-3 rounded-xl border flex items-center justify-center transition-colors ${platform === 'Zepto' ? 'bg-[#4B2E83]/40 border-[#8B5CF6] text-[#A78BFA] font-bold' : 'bg-[#0A2540]/50 border-slate-600 text-slate-400'}`}
+                        >
+                          <Zap size={16} className="mr-2" /> Zepto
+                        </button>
+                      </div>
+                    </div>
+                    
+                    {error && <p className="text-red-400 text-xs mt-2 ml-2 flex items-center"><AlertTriangle size={12} className="mr-1"/>{error}</p>}
+                  </div>
+
+                  <button type="submit" disabled={isLoading} className="w-full bg-gradient-to-r from-[#00D4FF] to-[#00A3FF] text-[#0A2540] font-bold text-lg py-4 rounded-2xl shadow-lg shadow-[#00D4FF]/20 flex items-center justify-center transition-transform active:scale-95 disabled:opacity-70 mb-4">
+                    {isLoading ? <div className="w-6 h-6 border-2 border-[#0A2540] border-t-transparent rounded-full animate-spin"></div> : 'Verify Number'}
+                  </button>
+                  
+                  <p className="text-center text-sm text-slate-400">
+                    Already have an account? <button type="button" onClick={() => { setAuthMode('login'); setStep('phone'); setError(''); }} className="text-[#00D4FF] font-bold underline">Log In</button>
+                  </p>
+                </form>
+              )}
+
+              {/* OTP STEP (Shared for Login and Signup) */}
+              {step === 'otp' && (
+                <form onSubmit={handleOtpSubmit} className="animate-in slide-in-from-right-8 duration-300">
+                  <button type="button" onClick={() => setStep(authMode === 'login' ? 'phone' : 'details')} className="text-slate-400 hover:text-white mb-4 flex items-center transition-colors text-sm">
+                    <ArrowLeft size={16} className="mr-1" /> Back
+                  </button>
+
+                  <h2 className="text-xl font-bold mb-2">Verify OTP</h2>
+                  <p className="text-sm text-slate-400 mb-6">We've sent a 4-digit code to +91 {phone}</p>
+                  
+                  <div className="mb-4">
+                    <div className="flex items-center bg-[#0A2540]/50 border border-slate-600 rounded-2xl p-4 focus-within:border-[#00D4FF] transition-colors tracking-[0.5em]">
+                      <Lock size={20} className="text-slate-400 mr-3 tracking-normal" />
+                      <input 
+                        type="text" 
+                        placeholder="••••"
+                        className="bg-transparent border-none outline-none text-white w-full text-center text-xl tracking-[0.5em] placeholder-slate-500"
+                        value={otp}
+                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                        maxLength={4}
+                      />
+                    </div>
+                    {error ? <p className="text-red-400 text-xs mt-2 ml-2 flex items-center"><AlertTriangle size={12} className="mr-1"/>{error}</p> : <p className="text-[#00D4FF] text-xs mt-2 ml-2">Hint: Use 1234 for demo</p>}
+                  </div>
+
+                  <button type="submit" disabled={isLoading} className="w-full bg-gradient-to-r from-[#00D4FF] to-[#00A3FF] text-[#0A2540] font-bold text-lg py-4 rounded-2xl shadow-lg shadow-[#00D4FF]/20 flex items-center justify-center transition-transform active:scale-95 disabled:opacity-70 mt-6">
+                    {isLoading ? <div className="w-6 h-6 border-2 border-[#0A2540] border-t-transparent rounded-full animate-spin"></div> : (authMode === 'signup' ? 'Verify & Continue' : 'Verify & Login')}
+                  </button>
+                </form>
+              )}
+
+              {/* SIGNUP FLOW - PLANS SELECTION */}
+              {step === 'plans' && (
+                <div className="animate-in slide-in-from-bottom-8 duration-500">
+                  <h2 className="text-2xl font-bold mb-1">Select Protection</h2>
+                  <p className="text-sm text-slate-400 mb-6">Choose a weekly plan to protect your {platform} earnings.</p>
+
+                  <div className="space-y-4 mb-6">
+                    {/* Basic Plan */}
+                    <div 
+                      onClick={() => handlePlanSelection('Aarambh')}
+                      className={`p-4 rounded-2xl cursor-pointer transition-all border-2 ${selectedPlan === 'Aarambh' ? 'bg-[#0A2540] border-[#00D4FF] shadow-[0_0_15px_rgba(0,212,255,0.2)]' : 'bg-white/5 border-transparent'}`}
+                    >
+                      <div className="flex justify-between items-center mb-1">
+                        <h3 className="font-bold text-lg flex items-center">🟢 Aarambh</h3>
+                        <p className="font-bold text-[#00D4FF]">₹20 <span className="text-xs font-normal text-slate-400">/week</span></p>
+                      </div>
+                      <p className="text-xs text-slate-400">Start / basic coverage. Covers Heavy Rain only.</p>
+                    </div>
+
+                    {/* Standard Plan */}
+                    <div 
+                      onClick={() => handlePlanSelection('Rakshak')}
+                      className={`p-4 rounded-2xl cursor-pointer transition-all border-2 relative ${selectedPlan === 'Rakshak' ? 'bg-[#0A2540] border-[#00D4FF] shadow-[0_0_15px_rgba(0,212,255,0.2)]' : 'bg-white/5 border-transparent'}`}
+                    >
+                      <div className="absolute top-0 right-0 bg-[#00D4FF] text-[#0A2540] text-[10px] font-bold px-2 py-0.5 rounded-bl-lg rounded-tr-xl">RECOMMENDED</div>
+                      <div className="flex justify-between items-center mb-1">
+                        <h3 className="font-bold text-lg flex items-center">🟡 Rakshak</h3>
+                        <p className="font-bold text-[#00D4FF]">₹30 <span className="text-xs font-normal text-slate-400">/week</span></p>
+                      </div>
+                      <p className="text-xs text-slate-300">Protector. Covers Rain & Pollution.</p>
+                    </div>
+
+                    {/* Premium Plan */}
+                    <div 
+                      onClick={() => handlePlanSelection('Mahakavach')}
+                      className={`p-4 rounded-2xl cursor-pointer transition-all border-2 ${selectedPlan === 'Mahakavach' ? 'bg-[#0A2540] border-[#00D4FF] shadow-[0_0_15px_rgba(0,212,255,0.2)]' : 'bg-white/5 border-transparent'}`}
+                    >
+                      <div className="flex justify-between items-center mb-1">
+                        <h3 className="font-bold text-lg flex items-center">🔴 Mahakavach</h3>
+                        <p className="font-bold text-[#00D4FF]">₹45 <span className="text-xs font-normal text-slate-400">/week</span></p>
+                      </div>
+                      <p className="text-xs text-slate-400">Ultimate protection. Covers Rain, AQI, Traffic, Strikes.</p>
+                    </div>
+                  </div>
+
+                  <button 
+                    onClick={processPayment}
+                    className="w-full bg-gradient-to-r from-[#00D4FF] to-[#00A3FF] text-[#0A2540] font-bold text-lg py-4 rounded-2xl shadow-lg flex items-center justify-center transition-transform active:scale-95"
+                  >
+                    Pay ₹{selectedPlan === 'Aarambh' ? '20' : selectedPlan === 'Rakshak' ? '30' : '45'} via UPI
+                  </button>
+                </div>
+              )}
+
+              {/* SIGNUP FLOW - MOCK PAYMENT */}
+              {step === 'payment' && (
+                <div className="flex flex-col items-center justify-center py-10 animate-in zoom-in-95 duration-300">
+                  {paymentStatus === 'processing' ? (
+                    <>
+                      <div className="relative w-24 h-24 flex items-center justify-center mb-6">
+                        <div className="absolute inset-0 border-4 border-[#0A2540] border-t-[#00D4FF] rounded-full animate-spin"></div>
+                        <IndianRupee size={32} className="text-[#00D4FF] animate-pulse" />
+                      </div>
+                      <h2 className="text-xl font-bold mb-2">Processing Payment</h2>
+                      <p className="text-sm text-slate-400 text-center">Securely linking UPI and processing first weekly premium...</p>
+                    </>
+                  ) : (
+                    <>
+                      <div className="w-24 h-24 bg-[#22C55E]/20 rounded-full flex items-center justify-center mb-6 animate-in zoom-in duration-300">
+                        <div className="w-16 h-16 bg-[#22C55E] rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(34,197,94,0.5)]">
+                          <Check size={40} className="text-white" />
+                        </div>
+                      </div>
+                      <h2 className="text-2xl font-bold mb-2 text-white">Payment Successful!</h2>
+                      <p className="text-[#00D4FF] font-medium mb-1">Plan Activated: {selectedPlan}</p>
+                      <p className="text-sm text-slate-400 text-center">Redirecting to your dashboard...</p>
+                    </>
+                  )}
+                </div>
+              )}
+
+            </div>
+          </div>
+          
+          {step !== 'plans' && step !== 'payment' && (
+            <div className="text-center mt-auto pb-4 relative z-10">
+              <p className="text-xs text-slate-500 flex items-center justify-center">
+                <ShieldCheck size={12} className="mr-1"/> IRDAI Compliant Framework
+              </p>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // --- TAB COMPONENTS ---
+
+    function HomeTab({ user, onTrigger }) {
+      // Extract first name for greeting
+      const firstName = user.name.split(' ')[0] || 'Partner';
+      
+      // Theme coloring based on platform
+      const platformColor = user.platform === 'Blinkit' ? 'text-yellow-500' : 'text-purple-500';
+
+      const planPrice = user.plan === 'Aarambh' ? '20' : user.plan === 'Rakshak' ? '30' : '45';
+      const planColor = user.plan === 'Aarambh' ? '🟢' : user.plan === 'Rakshak' ? '🟡' : '🔴';
+
+      return (
+        <div className="p-6 pt-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <h1 className="text-2xl font-bold text-[#0A2540]">Hi, {firstName} 👋</h1>
+              <p className="text-sm text-slate-500 flex items-center mt-1">
+                <MapPin size={14} className={`mr-1 ${platformColor}`} /> {user.platform} • Koramangala
+              </p>
+            </div>
+            <div className="relative bg-white p-2 rounded-full shadow-sm">
+              <Bell size={20} className="text-[#0A2540]" />
+              <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
+            </div>
+          </div>
+
+          <div className="bg-[#0A2540] rounded-3xl p-6 text-white shadow-[0_20px_40px_-15px_rgba(10,37,64,0.5)] mb-6 relative overflow-hidden">
+            <div className="absolute -right-10 -top-10 w-32 h-32 bg-[#00D4FF] rounded-full blur-3xl opacity-20"></div>
+            <div className="flex justify-between items-start mb-6 relative z-10">
+              <div>
+                <p className="text-[#00D4FF] text-sm font-semibold tracking-wider uppercase mb-1">Weekly Cover</p>
+                <h2 className="text-3xl font-bold flex items-center">{planColor} <span className="ml-2">{user.plan}</span></h2>
+              </div>
+              <div className="bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center border border-white/20">
+                <span className="w-2 h-2 bg-[#22C55E] rounded-full animate-pulse mr-2"></span>
+                <span className="text-xs font-medium text-white">Active</span>
+              </div>
+            </div>
+            
+            <div className="flex items-end justify-between relative z-10">
+              <div>
+                <p className="text-slate-400 text-sm mb-1">AI Calculated Premium</p>
+                <p className="text-xl font-semibold flex items-center">
+                  <IndianRupee size={18} /> {planPrice} <span className="text-sm font-normal text-slate-400 ml-1">/ week</span>
+                </p>
+              </div>
+              <ShieldCheck size={40} className="text-[#00D4FF] opacity-80" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 mb-8">
+            <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+              <div className="flex items-center text-slate-500 mb-2">
+                <ShieldCheck size={16} className="mr-2 text-[#22C55E]" />
+                <span className="text-xs font-semibold">Protected Earnings</span>
+              </div>
+              <h3 className="text-xl font-bold text-[#0A2540]">₹450</h3>
+              <p className="text-[10px] text-slate-400 mt-1">This month automatically</p>
+            </div>
+            <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+              <div className="flex items-center text-slate-500 mb-2">
+                <CloudRain size={16} className="mr-2 text-[#F59E0B]" />
+                <span className="text-xs font-semibold">Zone Risk Score</span>
+              </div>
+              <h3 className="text-xl font-bold text-[#F59E0B]">Moderate</h3>
+              <p className="text-[10px] text-slate-400 mt-1">7-Day Forecast: 0.45</p>
+            </div>
+          </div>
+
+          <div className="mt-8">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-[#0A2540]">PRD Trigger Testing</h3>
+              <Zap size={16} className="text-slate-400" />
+            </div>
+            
+            <div className="space-y-3">
+              <button onClick={() => onTrigger('rain')} className="w-full bg-gradient-to-r from-[#00D4FF]/10 to-[#00A3FF]/10 text-[#0369A1] font-bold py-3 px-4 rounded-xl shadow-sm border border-[#00D4FF]/30 flex items-center justify-between transition-transform active:scale-95">
+                <div className="flex items-center"><CloudRain className="mr-3" size={20} /> Simulate Rain &gt;15mm/hr</div>
+                <span className="text-xs bg-white px-2 py-1 rounded-md text-[#0A2540]">₹150 Payout</span>
+              </button>
+              
+              <button onClick={() => onTrigger('aqi')} className="w-full bg-gradient-to-r from-orange-500/10 to-red-500/10 text-[#9A3412] font-bold py-3 px-4 rounded-xl shadow-sm border border-orange-500/30 flex items-center justify-between transition-transform active:scale-95">
+                <div className="flex items-center"><Wind className="mr-3" size={20} /> Simulate AQI &gt; 450</div>
+                <span className="text-xs bg-white px-2 py-1 rounded-md text-[#0A2540]">₹100 Payout</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function ActivityTab() {
+      return (
+        <div className="p-6 pt-12 animate-in fade-in duration-300">
+          <h2 className="text-2xl font-bold text-[#0A2540] mb-6">Live Monitoring</h2>
+          
+          <div className="bg-[#E0F2FE] rounded-xl p-3 flex items-center justify-center border border-[#BAE6FD] mb-6">
+            <span className="w-2 h-2 bg-[#0284C7] rounded-full animate-pulse mr-2"></span>
+            <span className="text-sm font-semibold text-[#0369A1]">Continuously polling APIs for Koramangala</span>
+          </div>
+
+          <div className="space-y-4 mb-8">
+            <MetricCard 
+              icon={<CloudRain size={20} className="text-blue-500" />}
+              title="Weather API (IMD)"
+              value="Light Drizzle"
+              sub="3.2 mm/hr"
+              status="normal"
+            />
+            <MetricCard 
+              icon={<Car size={20} className="text-orange-500" />}
+              title="Traffic (Mapbox)"
+              value="Moderate Jam"
+              sub="Avg Speed: 18 km/h"
+              status="warning"
+            />
+            <MetricCard 
+              icon={<Wind size={20} className="text-green-500" />}
+              title="Air Quality (CPCB)"
+              value="AQI 142"
+              sub="Moderate"
+              status="normal"
+            />
+          </div>
+
+          <h3 className="text-lg font-bold text-[#0A2540] mb-4">Payout History</h3>
+          <div className="space-y-3">
+            <HistoryItem date="Aug 12" event="Heavy Rain (IMD)" amount="150" icon={<CloudRain size={16}/>} color="blue" />
+            <HistoryItem date="Jul 28" event="Pollution Spike (CPCB)" amount="100" icon={<Wind size={16}/>} color="gray" />
+            <HistoryItem date="Jun 05" event="Traffic Jam (Mapbox)" amount="120" icon={<Car size={16}/>} color="orange" />
+          </div>
+        </div>
+      );
+    }
+
+    function PlansTab({ user }) {
+      const renderPlanCard = (name, price, icon, desc, subDesc) => {
+        const isActive = user.plan === name;
+        
+        if (isActive) {
+          return (
+            <div className="bg-[#0A2540] p-5 rounded-2xl shadow-lg border border-[#00D4FF]/30 relative overflow-hidden">
+              <div className="absolute top-0 right-0 bg-[#00D4FF] text-[#0A2540] text-[10px] font-bold px-3 py-1 rounded-bl-lg">CURRENT PLAN</div>
+              <div className="flex justify-between items-start mb-2 relative z-10">
+                <h3 className="font-bold text-white text-lg flex items-center">{icon} <span className="ml-2">{name}</span></h3>
+                <p className="font-bold text-white">₹{price} <span className="text-xs font-normal text-[#00D4FF]">/week</span></p>
+              </div>
+              <p className="text-xs text-slate-300 mb-4 relative z-10">{desc} <br/><span className="text-slate-400">{subDesc}</span></p>
+              <button className="w-full py-2 bg-[#00D4FF]/20 border border-[#00D4FF]/50 text-[#00D4FF] rounded-xl text-sm font-semibold relative z-10">Currently Active</button>
+            </div>
+          );
+        }
+
+        return (
+          <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 opacity-80">
+            <div className="flex justify-between items-start mb-2">
+              <h3 className="font-bold text-[#0A2540] text-lg flex items-center">{icon} <span className="ml-2">{name}</span></h3>
+              <p className="font-bold text-[#0A2540]">₹{price} <span className="text-xs font-normal text-slate-400">/week</span></p>
+            </div>
+            <p className="text-xs text-slate-500 mb-4">{desc} <br/><span>{subDesc}</span></p>
+            <button className="w-full py-2 bg-slate-100 text-slate-600 rounded-xl text-sm font-semibold hover:bg-[#00D4FF]/10 hover:text-[#0A2540] transition-colors">Select Plan</button>
+          </div>
+        );
+      };
+
+      return (
+        <div className="p-6 pt-12 animate-in fade-in duration-300">
+          <h2 className="text-2xl font-bold text-[#0A2540] mb-2">Weekly Plans</h2>
+          <p className="text-sm text-slate-500 mb-6">Premiums dynamically calculated by AI based on local 7-day risk forecasts.</p>
+          
+          <div className="space-y-4">
+            {renderPlanCard('Aarambh', 20, '🟢', 'Start / basic coverage.', 'Covers Heavy Rain only.')}
+            {renderPlanCard('Rakshak', 30, '🟡', 'Protector.', 'Covers Rain & Pollution. AI pricing applied.')}
+            {renderPlanCard('Mahakavach', 45, '🔴', 'Ultimate protection.', 'Covers Rain, AQI, Traffic, Strikes.')}
+          </div>
+          
+          <div className="mt-6 bg-blue-50 p-4 rounded-xl flex items-start">
+            <ShieldCheck size={20} className="text-blue-500 mr-3 flex-shrink-0 mt-0.5" />
+            <p className="text-xs text-blue-800">Payments are automatically deducted matching your weekly earnings payout cycle.</p>
+          </div>
+        </div>
+      );
+    }
+
+    function ProfileTab({ user, onLogout }) {
+      const initial = user.name.charAt(0).toUpperCase();
+      const partnerPrefix = user.platform === 'Blinkit' ? 'BL' : 'ZP';
+
+      return (
+        <div className="p-6 pt-12 animate-in fade-in duration-300">
+          <h2 className="text-2xl font-bold text-[#0A2540] mb-8">Profile</h2>
+          
+          <div className="flex items-center mb-8">
+            <div className="w-16 h-16 bg-gradient-to-tr from-[#00D4FF] to-[#0A2540] rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-md">
+              {initial}
+            </div>
+            <div className="ml-4">
+              <h3 className="text-xl font-bold text-[#0A2540]">{user.name}</h3>
+              <p className="text-sm text-slate-500">{user.platform} ID: {partnerPrefix}-84729</p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex justify-between items-center">
+              <div>
+                <p className="text-sm font-semibold text-[#0A2540]">Aadhaar / KYC Status</p>
+                <p className="text-xs text-slate-500">Verified via DigiLocker</p>
+              </div>
+              <Fingerprint size={20} className="text-[#22C55E]" />
+            </div>
+
+            <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex justify-between items-center">
+              <div>
+                <p className="text-sm font-semibold text-[#0A2540]">Razorpay UPI Link</p>
+                <p className="text-xs text-slate-500">Linked to {user.phone}@upi</p>
+              </div>
+              <CheckCircle size={20} className="text-[#22C55E]" />
+            </div>
+            
+            <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex justify-between items-center">
+              <div>
+                <p className="text-sm font-semibold text-[#0A2540]">Telematics Access</p>
+                <p className="text-xs text-slate-500">GPS & Anomaly Detection Active</p>
+              </div>
+              <CheckCircle size={20} className="text-[#22C55E]" />
+            </div>
+          </div>
+          
+          <button onClick={onLogout} className="w-full mt-10 py-4 text-red-500 font-bold bg-red-50 rounded-2xl border border-red-100 hover:bg-red-100 transition-colors">
+            Sign Out
+          </button>
+        </div>
+      );
+    }
+
+    // --- MICRO COMPONENTS ---
+
+    function NavItem({ icon, label, active, onClick }) {
+      return (
+        <button onClick={onClick} className={`flex flex-col items-center justify-center w-20 transition-colors ${active ? 'text-[#00D4FF]' : 'text-slate-400'}`}>
+          <div className={`mb-1 transition-transform ${active ? '-translate-y-1' : ''}`}>
+            {icon}
+          </div>
+          <span className="text-[10px] font-semibold">{label}</span>
+        </button>
+      );
+    }
+
+    function MetricCard({ icon, title, value, sub, status }) {
+      return (
+        <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
+          <div className="flex items-center">
+            <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center mr-4 border border-slate-100">
+              {icon}
+            </div>
+            <div>
+              <p className="text-xs text-slate-500 font-medium mb-0.5">{title}</p>
+              <p className="text-sm font-bold text-[#0A2540]">{value}</p>
+            </div>
+          </div>
+          <div className="text-right">
+            <p className={`text-xs font-bold ${status === 'warning' ? 'text-[#F59E0B]' : 'text-slate-500'}`}>{sub}</p>
+          </div>
+        </div>
+      );
+    }
+
+    function HistoryItem({ date, event, amount, icon, color }) {
+      const colorMap = {
+        blue: "bg-blue-50 text-blue-500",
+        gray: "bg-slate-100 text-slate-600",
+        orange: "bg-orange-50 text-orange-500"
+      };
+      return (
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between">
+          <div className="flex items-center">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${colorMap[color]}`}>
+              {icon}
+            </div>
+            <div>
+              <p className="text-sm font-bold text-[#0A2540]">{event}</p>
+              <p className="text-xs text-slate-500">{date}</p>
+            </div>
+          </div>
+          <p className="text-sm font-bold text-[#22C55E]">+₹{amount}</p>
+        </div>
+      );
+    }
+
+    // --- EVENT SCREENS (MODALS) ---
+
+    function AlertModal({ triggerType, onComplete }) {
+      useEffect(() => {
+        const timer = setTimeout(() => { onComplete(); }, 4000);
+        return () => clearTimeout(timer);
+      }, [onComplete]);
+
+      const config = triggerType === 'rain' 
+        ? { title: "Heavy Rain Detected 🌧️", desc: "IMD API reports >15mm/hr rainfall in your active zone. Deliveries paused.", icon: <CloudRain size={40} className="text-blue-500" />, bg: "bg-blue-100" }
+        : { title: "Pollution Spike 😷", desc: "CPCB API reports AQI > 450 in your active zone. Deliveries paused.", icon: <Wind size={40} className="text-[#F59E0B]" />, bg: "bg-orange-100" };
+
+      return (
+        <div className="absolute inset-0 bg-[#0A2540]/60 backdrop-blur-sm z-50 flex flex-col items-center justify-end p-4 animate-in fade-in duration-300">
+          <div className="bg-white w-full rounded-[32px] p-6 pb-10 shadow-2xl animate-in slide-in-from-bottom-full duration-500 border-t-4 border-[#00D4FF]">
+            <div className="w-12 h-1.5 bg-slate-300 rounded-full mx-auto mb-6"></div>
+            <div className="flex justify-center mb-4">
+              <div className={`w-20 h-20 rounded-full flex items-center justify-center animate-pulse ${config.bg}`}>
+                {config.icon}
+              </div>
+            </div>
+            
+            <h2 className="text-2xl font-bold text-center text-[#0A2540] mb-2">{config.title}</h2>
+            <p className="text-center text-slate-600 mb-8 text-sm px-4">{config.desc}</p>
+            
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 mb-8 space-y-3 shadow-sm">
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-slate-500">Zone</span>
+                <span className="font-bold text-[#0A2540]">Koramangala Block 3</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-slate-500">Zero-Touch Claim</span>
+                <span className="font-bold text-[#0A2540]">Triggered</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-slate-500">Anti-Spoof GPS Check</span>
+                <span className="font-bold text-[#22C55E] flex items-center">Verified <CheckCircle size={14} className="ml-1" /></span>
+              </div>
+            </div>
+            
+            <button disabled className="w-full bg-[#0A2540] text-[#00D4FF] font-bold text-lg py-4 rounded-2xl shadow-lg flex items-center justify-center opacity-90">
+              <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-[#00D4FF]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Processing Payout...
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    function SuccessScreen({ triggerType, onReset }) {
+      const amount = triggerType === 'rain' ? "150" : "100";
+      
+      return (
+        <div className="absolute inset-0 bg-[#0A2540] z-50 flex flex-col items-center justify-center p-6 animate-in fade-in zoom-in-95 duration-500">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-[#22C55E] rounded-full blur-[100px] opacity-20"></div>
+          
+          <div className="relative z-10 flex flex-col items-center text-center w-full">
+            <div className="w-28 h-28 bg-[#22C55E]/20 rounded-full flex items-center justify-center mb-6">
+              <div className="w-20 h-20 bg-[#22C55E] rounded-full flex items-center justify-center shadow-[0_0_40px_rgba(34,197,94,0.6)]">
+                <CheckCircle size={48} className="text-white" />
+              </div>
+            </div>
+            
+            <h2 className="text-3xl font-bold text-[#00D4FF] mb-2">₹{amount} Credited! 💸</h2>
+            <p className="text-white/80 text-sm mb-12">Sent instantly to registered UPI via Razorpay.</p>
+            
+            <div className="w-full max-w-sm bg-white/10 backdrop-blur-md rounded-2xl p-6 mb-12 border border-white/10 text-left relative">
+              <div className="absolute left-[39px] top-10 bottom-10 w-0.5 bg-white/20"></div>
+
+              <div className="flex items-start mb-6 relative z-10">
+                <div className="w-6 h-6 rounded-full bg-[#0A2540] border-2 border-[#22C55E] flex items-center justify-center mr-4 mt-0.5 z-10">
+                  <div className="w-2 h-2 rounded-full bg-[#22C55E]"></div>
+                </div>
+                <div>
+                  <p className="text-white font-semibold text-sm">Disruption Detected</p>
+                  <p className="text-white/60 text-xs">External API Threshold crossed</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start mb-6 relative z-10">
+                <div className="w-6 h-6 rounded-full bg-[#0A2540] border-2 border-[#22C55E] flex items-center justify-center mr-4 mt-0.5 z-10">
+                  <div className="w-2 h-2 rounded-full bg-[#22C55E]"></div>
+                </div>
+                <div>
+                  <p className="text-white font-semibold text-sm">Telemetry Verified</p>
+                  <p className="text-white/60 text-xs">GPS & Isolation Forest ML check passed</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start relative z-10">
+                <div className="w-6 h-6 rounded-full bg-[#22C55E] flex items-center justify-center mr-4 mt-0.5 shadow-[0_0_10px_rgba(34,197,94,0.8)] z-10">
+                  <CheckCircle size={14} className="text-[#0A2540]" />
+                </div>
+                <div>
+                  <p className="text-white font-semibold text-sm">UPI Transfer Initiated</p>
+                  <p className="text-[#00D4FF] text-xs font-medium">Zero forms. Zero waiting.</p>
+                </div>
+              </div>
+            </div>
+            
+            <button onClick={onReset} className="w-full bg-gradient-to-r from-[#00D4FF] to-[#00A3FF] text-[#0A2540] font-bold text-lg py-4 rounded-2xl shadow-lg transition-transform active:scale-95">
+              Back to Dashboard
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // Initialize React
+    const root = createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
