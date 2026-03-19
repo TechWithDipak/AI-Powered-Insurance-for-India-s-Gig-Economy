@@ -1,151 +1,216 @@
 # 🚀 DropSure: AI-Powered Parametric Income Protection
 
-**DropSure** is an AI-enabled, fully automated parametric insurance platform designed for India's gig economy—specifically Q-Commerce delivery partners (Zepto, Blinkit, Instamart).
+DropSure is an **AI-driven parametric micro-insurance platform** designed for India’s gig economy — specifically **Q-Commerce delivery partners (Zepto, Blinkit, Instamart)**.
 
-It provides **zero-touch income protection** against uncontrollable disruptions like extreme weather, pollution spikes, and traffic shutdowns.
+It provides **zero-touch income protection** against real-world disruptions like weather, pollution, and traffic — ensuring riders don’t lose income due to factors beyond their control.
 
 ---
 
 ## ⚠️ Problem Statement
 
-Q-Commerce delivery riders operate under strict time constraints and hyper-local zones. External disruptions such as:
+Gig delivery partners operate under strict time & zone constraints.
 
+### Key Disruptions:
 - 🌧️ Sudden cloudbursts
 - 🏭 Severe pollution (AQI > 450)
-- 🚧 Road closures / strikes
+- 🚧 Traffic congestion / roadblocks / strikes
 
-...can pause delivery zones instantly, causing **20–30% income loss**.
+### Impact:
+- ❌ 20–30% income loss
+- ❌ No financial safety net
+- ❌ Traditional insurance does NOT cover income loss
 
-👉 Current issue:
-- No financial safety net
-- Traditional insurance does **not cover income loss**
-- Riders bear **100% of the risk**
+👉 Riders currently bear **100% of the risk**
 
 ---
 
 ## 💡 Solution: DropSure
 
-DropSure introduces **parametric micro-insurance**:
+DropSure introduces **Parametric Insurance for Income Protection**
 
-- No claims process
+### 🔥 Core Idea:
+- No claims
 - No paperwork
-- Fully automated payouts
+- No delays
 
-### How it works:
-1. System monitors real-time APIs (weather, traffic, municipal data)
-2. Detects disruptions using predefined thresholds
-3. Verifies rider presence in affected zone
-4. Instantly triggers payout via UPI
+👉 **Payouts are automatically triggered by real-world data**
 
 ---
 
-## 🎯 Target Users
+## 🔄 End-to-End Workflow
 
-**Q-Commerce Delivery Partners**
-- Zepto
-- Blinkit
-- Instamart
-
-### Why this segment?
-- Operate within strict ~2km zones
-- Cannot relocate easily during disruptions
-- Highly vulnerable to localized risks
-
----
-
-## 🚀 Key Innovations
-
-### 1. Event-Driven (Not Claim-Driven)
-- Payouts triggered by **data**, not user claims
-
-### 2. Hyper-Local Risk Assessment
-- Example: *"Koramangala Block 3 flooding"*, not generic city-level events
-
-### 3. Weekly Gig-Aligned Premiums
-- ₹20–₹45/week
-- Synced with rider payout cycles
+1. 📱 Rider signs up via mobile number + GPS access  
+2. 💰 Chooses weekly plan (₹20–₹45)  
+3. 🌐 System continuously monitors:
+   - Weather APIs
+   - Traffic APIs
+   - Municipal alerts  
+4. ⚡ Disruption detected via threshold logic  
+5. 📍 Rider location verified (GPS validation)  
+6. 💸 Instant payout triggered via UPI  
+7. 🔔 Rider notified instantly  
 
 ---
 
-## ⚙️ Core Features
+## ⚡ Parametric Trigger Definitions
 
-### 🧠 AI-Based Dynamic Premiums
+| Event Type        | Condition                              | Payout |
+|------------------|----------------------------------------|--------|
+| 🌧️ Heavy Rain    | Rainfall > 15mm/hr (30 mins)           | ₹150   |
+| 🌊 Flood Alert    | Govt API = TRUE                        | ₹200   |
+| 🚧 Traffic Jam    | Speed < 5 km/h (60 mins)               | ₹120   |
+| 🏭 Pollution     | AQI > 450                              | ₹100   |
+
+---
+
+## 💰 Weekly Premium Model (AI-Based)
+
+Premiums are dynamically calculated using AI:
+
+### 📊 Factors:
+- 📍 Location risk (flood/traffic zones)
+- 🌦️ 7-day weather forecast
+- 📈 Historical disruption data
+- 🚴 Rider activity patterns
+
+### 💡 Pricing Example:
+- Low Risk → ₹20/week  
+- Medium Risk → ₹30/week  
+- High Risk → ₹45/week  
+
+### 🤖 AI Logic:
+
+Premium = Base Price + (Risk Score × Multiplier)
+
+
+- Model: **XGBoost / Regression**
+- Output: Weekly risk probability
+
+---
+
+## 👤 Persona Scenario
+
+**Ravi — Blinkit Delivery Partner (Bangalore)**
+
+- Works in Koramangala (2km zone)
+- Earns ₹800/day
+
+### Situation:
+Heavy rainfall → deliveries paused for 2 hours
+
+### Without DropSure:
+❌ Loses ₹200 income  
+
+### With DropSure:
+✅ Rainfall detected via API  
+✅ GPS confirms Ravi in zone  
+✅ ₹150 credited instantly  
+
+👉 No claim, no stress
+
+---
+
+## 🧠 AI & ML Architecture
+
+### 1. 📊 Risk Prediction Model
+- Model: XGBoost / Random Forest  
+- Inputs:
+  - Weather forecast
+  - Historical data
+  - Zone risk patterns  
+- Output: Risk Score (0–1)
+
+---
+
+### 2. 🔐 Fraud Detection System
+- Detects:
+  - GPS spoofing
+  - Fake inactivity
+- Techniques:
+  - Isolation Forest (anomaly detection)
+  - Multi-API validation
+  - Movement consistency checks
+
+---
+
+### 3. ⚡ Smart Trigger Engine
 - Uses:
-  - 7-day weather forecasts
-  - Historical disruption data
-  - Rider performance metrics
-- Adjusts weekly pricing dynamically
-
----
-
-### ⚡ Zero-Touch Claims Automation
-
-**Trigger Conditions:**
-- Rainfall > threshold (e.g., 15mm/hr)
-- Traffic speed < 5 km/h for 60+ mins
-
-**Action:**
-- Auto payout (e.g., ₹150 for 2 hours lost)
-- Delivered instantly via UPI
-
----
-
-### 🔐 Fraud Detection System
-
-- 📍 GPS telemetry validation
-- 🔁 Multi-API consensus (weather + traffic)
-- Prevents spoofing and false triggers
+  - Weather + Traffic + Govt APIs
+- Ensures:
+  - Accurate payouts
+  - Zero false triggers
 
 ---
 
 ## 📱 Platform
 
-**Mobile-First Progressive Web App (PWA)**
+### Progressive Web App (PWA)
 
-Why PWA?
-- Lightweight
-- No app store dependency
-- Low data usage
-- Seamless integration with gig workflow
+- 📦 Lightweight
+- 📶 Low data usage
+- ⚡ Fast & installable
+- 📱 Works on all devices
+
+---
+
+## 📊 Dashboard (Planned)
+
+### Rider Dashboard:
+- Earnings protected
+- Weekly coverage status
+- Payout history
+
+### Admin Dashboard:
+- Risk heatmaps
+- Disruption analytics
+- Loss ratio insights
 
 ---
 
 ## 🛠️ Tech Stack
 
-### Frontend
-- Flutter (or)
-- React (PWA)
-
-### Backend
-- Node.js + Express.js
-
-### Database
-- PostgreSQL → policy data
-- MongoDB → time-series logs (GPS, weather)
-
-### AI/ML
-- Python
-- Scikit-learn / XGBoost
-
-### External APIs
-- 🌦️ Weather: OpenWeatherMap / Tomorrow.io
-- 🚦 Traffic: TomTom / Mapbox
-- 💳 Payments: Razorpay / UPI Simulator
+### 🚀 Frontend
+![React](https://skillicons.dev/icons?i=react)
+![Flutter](https://skillicons.dev/icons?i=flutter)
 
 ---
 
-## 📈 Feasibility & Scalability
+### ⚙️ Backend
+![NodeJS](https://skillicons.dev/icons?i=nodejs)
+![Express](https://skillicons.dev/icons?i=express)
 
-### Feasibility
-- No manual claims → low operational cost
-- API-driven → fast to implement
-- Fully buildable within **6 weeks**
+---
 
-### Scalability
-- Easily extend to:
-  - New cities
+### 🗄️ Database
+![PostgreSQL](https://skillicons.dev/icons?i=postgres)
+![MongoDB](https://skillicons.dev/icons?i=mongodb)
+
+---
+
+### 🤖 AI / ML
+![Python](https://skillicons.dev/icons?i=python)
+![Scikit-Learn](https://skillicons.dev/icons?i=sklearn)
+
+---
+
+### 🌐 APIs & Payments
+![Firebase](https://skillicons.dev/icons?i=firebase)
+![Stripe](https://skillicons.dev/icons?i=stripe)
+
+---
+
+## 🚀 Feasibility & Scalability
+
+### ✅ Feasibility
+- API-driven → fast implementation  
+- No manual claims → low cost  
+- Buildable in **6 weeks**
+
+### 📈 Scalability
+- Expand to:
   - Ride-hailing drivers
   - Logistics workers
+  - Pan-India rollout
 
 ---
 
@@ -153,44 +218,47 @@ Why PWA?
 
 ### Phase 2 (Weeks 3–4)
 - Backend engine
-- Weather API integration
-- ML premium model
-- Basic rider UI
+- API integrations
+- ML model
+- Basic UI
 
 ### Phase 3 (Weeks 5–6)
-- Automated trigger execution
-- Anti-spoofing system
-- Razorpay payout simulation
+- Trigger automation
+- Fraud detection
+- Payment simulation
 - Admin dashboard
 
 ---
 
-## 🛑 Compliance (Hackathon Constraints)
+## 🛑 Compliance
 
-- ✅ Covers **income loss only**
-- ❌ No health / accident / vehicle insurance
-- ✅ Weekly pricing model
-- ✅ Persona-specific solution
-- ✅ AI used for pricing + fraud detection
+- ✅ Income loss only  
+- ❌ No health/vehicle insurance  
+- ✅ Weekly pricing  
+- ✅ AI-based system  
+
+---
+
+## 🏆 Why DropSure Wins
+
+- ⚡ Zero-touch insurance  
+- 📍 Hyper-local accuracy  
+- 💸 Instant payouts  
+- 🤖 AI-driven fairness  
+- 🎯 Built for gig workers  
 
 ---
 
 ## 🔗 Links
 
 - 🎥 Pitch Video: [Add Link]
-- 💻 Repository: [Add Link]
+- 💻 GitHub Repo: [Add Link]
 
 ---
 
 ## 👥 Team
 
-Built for **Guidewire DEVTrails 2026**  
+Guidewire DEVTrails 2026  
 Team: *[Your Team Name]*
-
----
-
-## 📄 Reference
-
-This README is derived from the Phase 1 Proposal document. :contentReference[oaicite:0]{index=0}
 
 ---
