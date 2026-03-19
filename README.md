@@ -127,7 +127,7 @@ City-level risk model    →     Block-level hyper-local precision
 │                         │ Triggered ✅      │                   │
 │                         └────────┬─────────┘                   │
 │                                  ▼                              │
-│                    💸 Razorpay / UPI Auto-Payout                │
+│                    💸 Razorpay / UPI Auto-Payout                │ 
 │                    ₹150 credited for 2 lost hours               │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -303,17 +303,6 @@ Phase 1 — Weeks 1-2 (COMPLETE ✅)
 ├── Hackathon proposal submission
 └── Tech stack finalization
 
-Phase 2 — Weeks 3-4 (IN PROGRESS 🔄)
-├── Core backend engine development
-├── OpenWeatherMap API integration
-├── ML model for dynamic weekly premium
-└── Basic mobile UI (rider onboarding + policy view)
-
-Phase 3 — Weeks 5-6 (UPCOMING 🗓️)
-├── Automated trigger execution engine
-├── Anti-GPS spoofing telemetry validation
-├── Razorpay simulated payout integration
-└── Admin dashboard for loss ratio monitoring
 ```
 
 ---
