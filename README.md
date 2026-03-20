@@ -111,27 +111,21 @@ City-level risk model    →     Block-level hyper-local precision
 
 ## ⚙️ How It Works
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                      DropSure Engine                            │
-│                                                                 │
-│  🌦️ OpenWeatherMap API  ──┐                                    │
-│  🚗 TomTom Traffic API  ──┼──► 🧠 AI Consensus Engine          │
-│  🗺️ Geo-fence Layer     ──┘         │                          │
-│                                     ▼                          │
-│                         📍 Rider in Active Zone?               │
-│                                     │                          │
-│                              YES    ▼    NO                     │
-│                         ┌──────────────────┐                   │
-│                         │ Smart Contract    │──► No action      │
-│                         │ Triggered ✅      │                   │
-│                         └────────┬─────────┘                   │
-│                                  ▼                              │
-│                    💸 Razorpay / UPI Auto-Payout                │ 
-│                    ₹150 credited for 2 lost hours               │
-└─────────────────────────────────────────────────────────────────┘
-```
+## DropSure Engine — Flow Diagram
+```mermaid
+flowchart TD
+    A[🌦️ OpenWeatherMap API]  --> D
+    B[🚗 TomTom Traffic API]  --> D
+    C[🗺️ Geo-fence Layer]     --> D
 
+    D[🧠 AI Consensus Engine]
+    D --> E{📍 Rider in Active Zone?}
+
+    E -- YES --> F[✅ Smart Contract Triggered]
+    E -- NO  --> G[No action]
+
+    F --> H[🪄 Razorpay / UPI Auto-Payout\n₹150 credited for 2 lost hours]
+```
 ### Trigger Conditions (AND Logic)
 
 A payout fires **only when ALL of the following are true:**
@@ -362,9 +356,3 @@ Phase 1 — Weeks 1-2 (COMPLETE ✅)
 
 *DropSure — Because every hour of work deserves protection.*
 
-<br/>
-
-[![GitHub stars](https://img.shields.io/github/stars/your-org/dropsure?style=social)](https://github.com/your-org/dropsure)
-[![Twitter Follow](https://img.shields.io/twitter/follow/DropSureApp?style=social)](https://twitter.com/DropSureApp)
-
-</div>
