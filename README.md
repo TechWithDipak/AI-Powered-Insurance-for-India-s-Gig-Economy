@@ -342,7 +342,7 @@ Phase 1 — Weeks 1-2 (COMPLETE ✅)
 | Resource | Link |
 |---|---|
 | 🎬 Phase 1 Pitch Video (2 min) | [▶️ Watch on YouTube / Drive](https://drive.google.com/file/d/119CgHxI2WwaYCkCc-N-LzdhcFKmO2mH2/view?usp=drivesdk) |
-| 💻 GitHub Repository | [🔗 View Code](https://github.com/your-repo) |
+| 💻 GitHub Repository | [🔗 View Code](https://github.com/TechWithDipak/AI-Powered-Insurance-for-India-s-Gig-Economy) |
 | 🌐 Live Demo (PWA) | [🚀 Try DropSure](https://ai-powered-insurance-for-india-s-gi.vercel.app/) |
 
 </div>
