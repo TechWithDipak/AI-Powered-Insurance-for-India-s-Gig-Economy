@@ -313,15 +313,16 @@ Phase 1 — Weeks 1-2 (COMPLETE ✅)
 ## 👥 Team
 
 <div align="center">
-
+ 
 | Role | Responsibilities |
 |---|---|
-| 🧑‍💼 Product Lead | Research, UX design, compliance |
-| 🧑‍💻 Backend Engineer | Node.js engine, API integrations |
-| 👩‍🔬 ML Engineer | Risk model, premium pricing algorithm |
-| 🎨 Frontend Developer | PWA/Flutter UI, dashboard |
+| 🧑‍💼 Pranay Gour N | Research, UX design, compliance |
+| 🧑‍💻 Dipak kumar | Node.js engine, API integrations |
+| 👩‍🔬 Poojitha V | Risk model, premium pricing algorithm |
+| 🎨 Kishore B  | PWA/Flutter UI, dashboard |
+| 🔐 Dheirya V Mehta | Cloud infra, fraud detection, deployment |
 
-> *Built with ❤️ for India's gig workers by Team [Your Team Name]*
+> *Built with ❤️ for India's gig workers by Team Syntax Society*
 
 </div>
 
