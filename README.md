@@ -1,8 +1,6 @@
 <div align="center">
-
-<img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=900&size=42&duration=3000&pause=1000&color=00D4FF&center=true&vCenter=true&width=700&lines=🛡️+DropSure;Zero-Touch+Income+Protection;Built+for+India's+Gig+Economy" alt="DropSure Typing SVG" />
-
-<br/>
+  <img src="https://raw.githubusercontent.com/TechWithDipak/AI-Powered-Insurance-for-India-s-Gig-Economy/main/%20logo.png" alt="DropSure Logo" width="300" />
+</div>
 
 > **AI-Powered Parametric Insurance for Q-Commerce Delivery Partners**
 > *When the rain stops your ride, DropSure covers your side.*
