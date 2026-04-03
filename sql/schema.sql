@@ -9,6 +9,7 @@ CREATE TABLE profiles (
   shift_timing TEXT,
   location TEXT,
   active_plan TEXT DEFAULT 'None',
+  role TEXT DEFAULT 'worker',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 
@@ -48,7 +49,14 @@ CREATE POLICY "Users can insert own profile" ON profiles FOR INSERT WITH CHECK (
 -- Allow public read on policies
 CREATE POLICY "Public read policies" ON policies FOR SELECT USING (true);
 
--- Allow users to read their own claims
-CREATE POLICY "Users can read own claims" ON claims FOR SELECT USING (auth.uid() = user_id);
--- Allow inserts for automation logic
+-- Allow users and backend can insert claims
 CREATE POLICY "Users and backend can insert claims" ON claims FOR INSERT WITH CHECK (auth.uid() = user_id OR auth.uid() IS NULL);
+
+-- Admin Override Policies
+CREATE POLICY "Admins can read all profiles" ON profiles FOR SELECT USING (
+  (SELECT role FROM profiles WHERE id = auth.uid()) = 'admin'
+);
+
+CREATE POLICY "Admins can read all claims" ON claims FOR SELECT USING (
+  (SELECT role FROM profiles WHERE id = auth.uid()) = 'admin'
+);

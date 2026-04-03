@@ -202,6 +202,40 @@ function SidebarItem({ icon, label, active, onClick }) {
 
 // --- ADMIN DASHBOARD ---
 function AdminDashboard({ user, onLogout }) {
+   const [activeSubTab, setActiveSubTab] = useState('overview');
+   const [stats, setStats] = useState({ activeUsers: 0, totalPaid: 0, avgRisk: 1.04 });
+   const [recentClaims, setRecentClaims] = useState([]);
+   const [allProfiles, setAllProfiles] = useState([]);
+   const [loading, setLoading] = useState(true);
+
+   const fetchAdminData = async () => {
+      try {
+         setLoading(true);
+         const res = await fetch('/api/admin/stats');
+         const data = await res.json();
+         
+         if (data.success) {
+            setStats(data.stats);
+            setRecentClaims(data.recentClaims);
+            setAllProfiles(data.allProfiles);
+         }
+      } catch (err) {
+         console.error("Admin Fetch Error:", err);
+      } finally {
+         setLoading(false);
+      }
+   };
+
+   useEffect(() => {
+      fetchAdminData();
+      const channel = supabase
+         .channel('admin_realtime')
+         .on('postgres_changes', { event: '*', table: 'claims' }, () => fetchAdminData())
+         .on('postgres_changes', { event: '*', table: 'profiles' }, () => fetchAdminData())
+         .subscribe();
+      return () => supabase.removeChannel(channel);
+   }, []);
+
    return (
       <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row text-[#0A2540] font-sans">
         <aside className="hidden md:flex flex-col w-64 bg-red-950 text-white fixed h-full z-20">
@@ -210,9 +244,9 @@ function AdminDashboard({ user, onLogout }) {
              <h2 className="text-2xl font-bold tracking-tight">Admin</h2>
           </div>
           <nav className="flex-1 px-4 space-y-2">
-             <SidebarItem icon={<Activity size={20} />} label="Overview" active={true} onClick={() => {}} />
-             <SidebarItem icon={<Users size={20} />} label="User Profiles" active={false} onClick={() => {}} />
-             <SidebarItem icon={<Settings size={20} />} label="Risk Settings" active={false} onClick={() => {}} />
+             <SidebarItem icon={<Activity size={20} />} label="Overview" active={activeSubTab === 'overview'} onClick={() => setActiveSubTab('overview')} />
+             <SidebarItem icon={<Users size={20} />} label="User Profiles" active={activeSubTab === 'users'} onClick={() => setActiveSubTab('users')} />
+             <SidebarItem icon={<Settings size={20} />} label="Risk Settings" active={activeSubTab === 'settings'} onClick={() => setActiveSubTab('settings')} />
           </nav>
           <div className="p-4 border-t border-red-900">
              <button onClick={onLogout} className="w-full py-3 bg-red-500/10 text-white rounded-lg hover:bg-red-500/20 font-semibold transition-colors">Sign Out</button>
@@ -220,47 +254,112 @@ function AdminDashboard({ user, onLogout }) {
         </aside>
 
         <main className="flex-1 md:ml-64 flex flex-col p-6 md:p-12 w-full max-w-6xl mx-auto">
-          <header className="mb-10">
-            <h1 className="text-3xl font-bold text-slate-800">Platform Analytics</h1>
-            <p className="text-slate-500">Overview of DropSure automated risk platform.</p>
-          </header>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-             <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-               <p className="text-sm text-slate-500 font-semibold">Total Active Cover</p>
-               <h3 className="text-3xl font-bold text-[#0A2540] mt-2">1,240</h3>
-               <p className="text-xs text-green-500 mt-2">↑ 12% this week</p>
-             </div>
-             <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-               <p className="text-sm text-slate-500 font-semibold">Automated Claims Paid</p>
-               <h3 className="text-3xl font-bold text-[#0A2540] mt-2">₹124,500</h3>
-               <p className="text-xs text-slate-400 mt-2">84 disrupted workers</p>
-             </div>
-             <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-               <p className="text-sm text-slate-500 font-semibold">AI Risk Multipiler (Avg)</p>
-               <h3 className="text-3xl font-bold text-orange-500 mt-2">x 1.04</h3>
-               <p className="text-xs text-slate-400 mt-2">Moderate Rain Risk</p>
-             </div>
-          </div>
-          
-          <h2 className="text-xl font-bold mb-4">Recent Zero-Touch Operations</h2>
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-             <table className="w-full text-left">
-               <thead className="bg-slate-50 border-b border-slate-100">
-                 <tr>
-                   <th className="p-4 text-sm font-semibold text-slate-500">Worker</th>
-                   <th className="p-4 text-sm font-semibold text-slate-500">Trigger Event</th>
-                   <th className="p-4 text-sm font-semibold text-slate-500">Amount</th>
-                   <th className="p-4 text-sm font-semibold text-slate-500">Status</th>
-                 </tr>
-               </thead>
-               <tbody className="divide-y divide-slate-100">
-                 <tr><td className="p-4 text-sm">Ravi N.</td><td className="p-4 text-sm">Heavy Rain &gt; 15mm</td><td className="p-4 text-sm font-bold">₹120</td><td className="p-4"><span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">Paid</span></td></tr>
-                 <tr><td className="p-4 text-sm">Pranay G.</td><td className="p-4 text-sm">AQI Spike &gt; 180</td><td className="p-4 text-sm font-bold">₹100</td><td className="p-4"><span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">Paid</span></td></tr>
-                 <tr><td className="p-4 text-sm">Dipak K.</td><td className="p-4 text-sm">Water-Logging (Mock)</td><td className="p-4 text-sm font-bold">₹300</td><td className="p-4"><span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">Paid</span></td></tr>
-               </tbody>
-             </table>
-          </div>
+          {activeSubTab === 'overview' && (
+            <>
+              <header className="mb-10 flex justify-between items-center">
+                <div>
+                  <h1 className="text-3xl font-bold text-slate-800 font-sans tracking-tight">Platform Analytics</h1>
+                  <p className="text-slate-500">Overview of DropSure automated risk platform.</p>
+                </div>
+                <div className="bg-green-100 text-green-700 px-4 py-2 rounded-full text-xs font-bold flex items-center">
+                   <span className="w-2 h-2 bg-green-500 rounded-full animate-ping mr-2"></span>
+                   Live from Supabase
+                </div>
+              </header>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                 <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+                   <p className="text-sm text-slate-500 font-bold uppercase tracking-wider">Total Active Cover</p>
+                   <h3 className="text-4xl font-extrabold text-[#0A2540] mt-2">{loading ? '...' : stats.activeUsers}</h3>
+                   <p className="text-xs text-green-600 font-bold mt-2 flex items-center">↑ 12% growth</p>
+                 </div>
+                 <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+                   <p className="text-sm text-slate-500 font-bold uppercase tracking-wider">Claims Payouts</p>
+                   <h3 className="text-4xl font-extrabold text-[#0A2540] mt-2">₹{loading ? '...' : stats.totalPaid}</h3>
+                   <p className="text-xs text-slate-400 font-medium mt-2">Automated settlements</p>
+                 </div>
+                 <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow border-l-4 border-l-orange-400">
+                   <p className="text-sm text-slate-500 font-bold uppercase tracking-wider">Avg Risk Factor</p>
+                   <h3 className="text-4xl font-extrabold text-orange-500 mt-2">x {stats.avgRisk}</h3>
+                   <p className="text-xs text-slate-400 font-medium mt-2">Dynamic pricing</p>
+                 </div>
+              </div>
+              
+              <h2 className="text-2xl font-bold text-[#0A2540] mb-6">Recent Zero-Touch Operations</h2>
+              <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+                 <table className="w-full text-left">
+                   <thead className="bg-slate-50/50 border-b border-slate-100">
+                     <tr>
+                       <th className="p-5 text-xs font-bold text-slate-400 uppercase tracking-widest">Worker</th>
+                       <th className="p-5 text-xs font-bold text-slate-400 uppercase tracking-widest">Trigger</th>
+                       <th className="p-5 text-xs font-bold text-slate-400 uppercase tracking-widest">Amount</th>
+                       <th className="p-5 text-xs font-bold text-slate-400 uppercase tracking-widest">Status</th>
+                     </tr>
+                   </thead>
+                   <tbody className="divide-y divide-slate-50">
+                     {recentClaims.map((claim) => (
+                        <tr key={claim.id} className="hover:bg-slate-50/50 transition-colors">
+                          <td className="p-5 text-sm font-semibold">{claim.profiles?.name || 'Worker'}</td>
+                          <td className="p-5 text-sm text-slate-600">{claim.reason}</td>
+                          <td className="p-5 text-sm font-bold text-[#0A2540]">₹{claim.amount}</td>
+                          <td className="p-5"><span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold uppercase">{claim.status}</span></td>
+                        </tr>
+                     ))}
+                     {recentClaims.length === 0 && <tr><td colSpan="4" className="p-10 text-center text-slate-400 italic">No real-time claims found. Ensure RLS policies are active.</td></tr>}
+                   </tbody>
+                 </table>
+              </div>
+            </>
+          )}
+
+          {activeSubTab === 'users' && (
+            <div className="animate-in fade-in duration-300">
+              <h1 className="text-3xl font-bold text-slate-800 mb-8">Registered Partners</h1>
+              <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+                 <table className="w-full text-left">
+                   <thead className="bg-slate-50/50 border-b border-slate-100">
+                     <tr>
+                       <th className="p-5 text-xs font-bold text-slate-400 uppercase tracking-widest">Name</th>
+                       <th className="p-5 text-xs font-bold text-slate-400 uppercase tracking-widest">Platform</th>
+                       <th className="p-5 text-xs font-bold text-slate-400 uppercase tracking-widest">Location</th>
+                       <th className="p-5 text-xs font-bold text-slate-400 uppercase tracking-widest">Active Plan</th>
+                       <th className="p-5 text-xs font-bold text-slate-400 uppercase tracking-widest">Role</th>
+                     </tr>
+                   </thead>
+                   <tbody className="divide-y divide-slate-50">
+                     {allProfiles.map((p) => (
+                        <tr key={p.id} className="hover:bg-slate-50/50 transition-colors">
+                          <td className="p-5 text-sm font-semibold">{p.name}</td>
+                          <td className="p-5 text-sm text-slate-600">{p.platform}</td>
+                          <td className="p-5 text-sm text-slate-600">{p.location}</td>
+                          <td className="p-5 text-sm"><span className={`px-2 py-1 rounded font-bold text-[10px] ${p.active_plan === 'None' ? 'bg-slate-100 text-slate-400' : 'bg-blue-100 text-blue-700'}`}>{p.active_plan}</span></td>
+                          <td className="p-5 text-sm uppercase font-bold text-[10px] tracking-widest">{p.role}</td>
+                        </tr>
+                     ))}
+                   </tbody>
+                 </table>
+              </div>
+            </div>
+          )}
+
+          {activeSubTab === 'settings' && (
+            <div className="animate-in fade-in duration-300 bg-white p-12 rounded-3xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-center">
+              <Settings size={48} className="text-slate-300 mb-4" />
+              <h2 className="text-xl font-bold text-slate-600">Risk Threshold Settings</h2>
+              <p className="text-slate-500 max-w-sm mt-2">Adjust AI payout triggers and premium multipliers for the entire platform.</p>
+              <div className="mt-8 space-y-4 w-full max-w-md">
+                 <div className="flex justify-between items-center p-4 bg-slate-50 rounded-2xl">
+                    <span className="font-bold text-sm">Rain Trigger ({'>'} mm/hr)</span>
+                    <input type="number" defaultValue="15" className="w-16 bg-white border border-slate-200 rounded p-1 text-center font-bold" />
+                 </div>
+                 <div className="flex justify-between items-center p-4 bg-slate-50 rounded-2xl">
+                    <span className="font-bold text-sm">AQI Hazard Level</span>
+                    <input type="number" defaultValue="180" className="w-16 bg-white border border-slate-200 rounded p-1 text-center font-bold" />
+                 </div>
+                 <button className="w-full bg-[#0A2540] text-white font-bold py-3 rounded-xl mt-4 opacity-50 cursor-not-allowed">Save Global Policy</button>
+              </div>
+            </div>
+          )}
         </main>
       </div>
    );

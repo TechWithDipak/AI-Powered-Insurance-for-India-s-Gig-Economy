@@ -81,14 +81,17 @@ export default function LoginScreen({ onLogin }) {
     setIsLoading(true);
     setError('');
 
+    // HARDCODED ADMIN CHECK
     if (authMode === 'admin') {
       if (email === 'admin@dropsure.com' && password === 'Admin123!') {
         setIsLoading(false);
-        onLogin({ role: 'admin', email });
+        onLogin({ id: 'admin-id', role: 'admin', name: 'System Admin', email: 'admin@dropsure.com' });
+        return;
+      } else {
+        setIsLoading(false);
+        setError('Invalid admin credentials.');
         return;
       }
-      setIsLoading(false);
-      return setError('Invalid admin credentials.');
     }
 
     try {
@@ -110,7 +113,8 @@ export default function LoginScreen({ onLogin }) {
                  platform: dbData.platform || profile.platform,
                  location: dbData.location || profile.location,
                  shiftTiming: dbData.shift_timing || profile.shiftTiming,
-                 plan: dbData.active_plan || profile.plan
+                 plan: dbData.active_plan || profile.plan,
+                 role: dbData.role || 'worker'
               };
            }
         } catch(e) {}
@@ -119,7 +123,7 @@ export default function LoginScreen({ onLogin }) {
       }
     } catch (err) {
       console.error("Supabase Auth Error:", err);
-      setError(err.message || 'Invalid login credentials. Please register first.');
+      setError(err.message || 'Invalid login credentials.');
     } finally {
       setIsLoading(false);
     }
