@@ -114,17 +114,60 @@ export default function Chatbot({ visible, onClose, claimInfo, premiumInfo, acti
 
           {/* Premium Explanation View */}
           {localPremium && (
-            <div className="bg-slate-100 text-slate-800 p-4 rounded-2xl rounded-tl-none text-sm max-w-[95%] shadow-sm">
-              <p className="font-bold mb-2 flex items-center text-[#0A2540] border-b border-slate-200 pb-2"><ShieldCheck size={16} className="mr-2 text-blue-500"/> Risk Matrix Expansion</p>
-              <ul className="pl-1 space-y-2 text-xs text-slate-600">
-                <li className="flex justify-between items-center bg-white p-2 rounded"><span>Base Plan Cost</span> <span className="font-bold">₹{localPremium.base}</span></li>
-                <li className="flex justify-between items-center bg-white p-2 rounded"><span>Rain Probability <span className="opacity-50">((val*0.45))</span></span> <span className="font-bold text-blue-500">{(localPremium.rain * 100).toFixed(0)}%</span></li>
-                <li className="flex justify-between items-center bg-white p-2 rounded"><span>AQI Level <span className="opacity-50">((val/500)*0.25)</span></span> <span className="font-bold text-orange-500">{localPremium.aqiRaw}</span></li>
-              </ul>
-              <div className="mt-3 text-xs bg-white p-3 rounded-xl border border-slate-200">
-                Algorithmic Risk Score: <span className="float-right font-bold">{localPremium.score}</span> <br/>
-                <div className="h-px bg-slate-100 my-2"></div>
-                Final Pricing <span className="float-right text-[#00D4FF] font-bold text-sm">₹{localPremium.final}</span>
+            <div className="space-y-4 animate-in fade-in slide-in-from-left-4 duration-500">
+              {/* BLOCK 1: METHODOLOGY */}
+              <div className="bg-[#0A2540] text-white p-4 rounded-2xl shadow-md border-l-4 border-[#00D4FF]">
+                <p className="font-bold mb-2 flex items-center text-sm uppercase tracking-wider text-[#00D4FF]">
+                  <Zap size={14} className="mr-2"/> Algorithmic Methodology
+                </p>
+                <p className="text-[11px] text-slate-300 leading-relaxed mb-3">
+                  Our neural-weighted engine balances plan costs against hyper-local environmental risk factors.
+                </p>
+                <div className="grid grid-cols-3 gap-2">
+                   <div className="bg-white/5 p-2 rounded-lg border border-white/10 text-center">
+                     <p className="text-[9px] text-slate-400 uppercase">Rain Wt</p>
+                     <p className="text-xs font-bold">45%</p>
+                   </div>
+                   <div className="bg-white/5 p-2 rounded-lg border border-white/10 text-center">
+                     <p className="text-[9px] text-slate-400 uppercase">AQI Wt</p>
+                     <p className="text-xs font-bold">25%</p>
+                   </div>
+                   <div className="bg-white/5 p-2 rounded-lg border border-white/10 text-center">
+                     <p className="text-[9px] text-slate-400 uppercase">Shift Wt</p>
+                     <p className="text-xs font-bold">30%</p>
+                   </div>
+                </div>
+              </div>
+
+              {/* BLOCK 2: LIVE CALCULATION */}
+              <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm">
+                <p className="font-bold mb-3 flex items-center text-[#0A2540] text-sm">
+                  <ShieldCheck size={16} className="mr-2 text-blue-500"/> Live Calculation Record
+                </p>
+                <ul className="space-y-2 text-xs text-slate-600">
+                  <li className="flex justify-between items-center py-1 border-b border-dotted border-slate-200">
+                    <span>Base Plan ({activePlan})</span> 
+                    <span className="font-bold text-slate-900">₹{localPremium.base_price}</span>
+                  </li>
+                  <li className="flex justify-between items-center py-1 border-b border-dotted border-slate-200">
+                    <span>Weather Risk (Prob: {(localPremium.rain * 100).toFixed(0)}%)</span> 
+                    <span className="font-bold text-blue-500">+ ₹{Math.round(localPremium.rain * 10)}</span>
+                  </li>
+                  <li className="flex justify-between items-center py-1 border-b border-dotted border-slate-200">
+                    <span>AQI Surcharge (Level: {localPremium.aqi_raw})</span> 
+                    <span className="font-bold text-orange-500">+ ₹{Math.round((localPremium.aqi_raw / 500) * 5)}</span>
+                  </li>
+                </ul>
+                <div className="mt-4 pt-3 border-t border-slate-100 flex justify-between items-end">
+                  <div>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase">Total Multiplier</p>
+                    <p className="text-sm font-bold text-[#0A2540]">{localPremium.risk_score}x Risk</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] text-slate-400 font-bold uppercase">Weekly Total</p>
+                    <p className="text-xl font-black text-[#00D4FF]">₹{localPremium.dynamic_premium}</p>
+                  </div>
+                </div>
               </div>
             </div>
           )}

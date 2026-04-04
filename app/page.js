@@ -100,6 +100,58 @@ export default function DropSureApp() {
     }
   };
 
+  const handleUpgrade = async (newPlan) => {
+    if (!user?.id) return;
+    
+    setAppState('alerting'); 
+    setActiveTrigger('plan_upgrade');
+
+    try {
+      console.log(`Sending API request to secure upgrade endpoint for user ${user.id}...`);
+      
+      const response = await fetch('/api/upgrade', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          newPlan: newPlan,
+          name: user.name,
+          platform: user.platform,
+          location: user.location,
+          shiftTiming: user.shiftTiming
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        console.error("API Upgrade Error:", data.error);
+        throw new Error(data.error || "Failed to upgrade via API");
+      }
+
+      console.log("Upgrade successful via secure API:", data.profile);
+
+      // Update local state
+      const updatedUser = { ...user, plan: newPlan };
+      setUser(updatedUser);
+      
+      setTimeout(() => {
+        setAppState('success');
+        setTimeout(() => {
+          setAppState('idle');
+          setActiveTab('home'); // Go back home after upgrade
+        }, 3000);
+      }, 2000);
+
+    } catch (err) {
+      console.error("Upgrade Try/Catch Error:", err);
+      setAppState('idle');
+      alert(`Failed to upgrade plan: ${err.message}. Please check your connection.`);
+    }
+  };
+
   const handleLogout = () => {
     setIsAuthenticated(false);
     setActiveTab('home');
@@ -166,7 +218,7 @@ export default function DropSureApp() {
         <div className="flex-1 overflow-y-auto pb-6 px-4 md:px-10 lg:px-20 max-w-5xl mx-auto w-full">
           {appState === 'idle' && activeTab === 'home' && <HomeTab user={user} claims={claims} onTrigger={triggerDisruption} />}
           {appState === 'idle' && activeTab === 'activity' && <ActivityTab weatherData={weatherData} disruptionData={disruptionData} claims={claims} onTrigger={triggerDisruption} />}
-          {appState === 'idle' && activeTab === 'plans' && <PlansTab user={user} />}
+          {appState === 'idle' && activeTab === 'plans' && <PlansTab user={user} onUpgrade={handleUpgrade} />}
           {appState === 'idle' && activeTab === 'profile' && <ProfileTab user={user} onLogout={handleLogout} />}
         </div>
         

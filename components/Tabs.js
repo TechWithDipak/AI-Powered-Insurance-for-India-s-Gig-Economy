@@ -193,7 +193,11 @@ export function ActivityTab({ weatherData, disruptionData, claims, onTrigger }) 
   );
 }
 
-export function PlansTab({ user }) {
+export function PlansTab({ user, onUpgrade }) {
+  const isAarambh = user.plan === 'Aarambh';
+  const isRakshak = user.plan === 'Rakshak';
+  const isMahakavach = user.plan === 'Mahakavach';
+
   return (
     <div className="p-6 pt-12 animate-in fade-in duration-300">
       <h2 className="text-2xl font-bold text-[#0A2540] mb-6">Your Coverage</h2>
@@ -204,7 +208,7 @@ export function PlansTab({ user }) {
         <h3 className="text-2xl font-bold mb-4">{user.plan}</h3>
         
         <div className="space-y-3 relative z-10 text-sm">
-          {user.plan === 'Mahakavach' && (
+          {isMahakavach && (
             <>
               <div className="flex items-center"><CheckCircle size={16} className="text-[#22C55E] mr-3" /> Heavy Rainfall</div>
               <div className="flex items-center"><CheckCircle size={16} className="text-[#22C55E] mr-3" /> Severe AQI spikes</div>
@@ -212,14 +216,14 @@ export function PlansTab({ user }) {
               <div className="flex items-center"><CheckCircle size={16} className="text-[#22C55E] mr-3" /> Area Curfew / Strikes</div>
             </>
           )}
-          {user.plan === 'Rakshak' && (
+          {isRakshak && (
             <>
               <div className="flex items-center"><CheckCircle size={16} className="text-[#22C55E] mr-3" /> Heavy Rainfall</div>
               <div className="flex items-center"><CheckCircle size={16} className="text-[#22C55E] mr-3" /> Severe AQI spikes</div>
               <div className="flex items-center opacity-50"><X size={16} className="text-red-400 mr-3" /> Water-logging / Floods</div>
             </>
           )}
-          {user.plan === 'Aarambh' && (
+          {isAarambh && (
             <>
               <div className="flex items-center"><CheckCircle size={16} className="text-[#22C55E] mr-3" /> Heavy Rainfall</div>
               <div className="flex items-center opacity-50"><X size={16} className="text-red-400 mr-3" /> Severe AQI spikes</div>
@@ -231,22 +235,35 @@ export function PlansTab({ user }) {
 
       <h3 className="text-lg font-bold text-[#0A2540] mb-4">Upgrade Options</h3>
       <div className="space-y-4 pb-8">
-        <div className="border border-slate-200 rounded-2xl p-5 shadow-sm bg-white relative overflow-hidden">
-          <div className="absolute top-0 right-0 bg-[#00D4FF] text-[#0A2540] text-[10px] font-bold px-3 py-1 rounded-bl-xl uppercase">Recommended</div>
+        <div className={`border border-slate-200 rounded-2xl p-5 shadow-sm bg-white relative overflow-hidden ${isRakshak ? 'border-blue-400' : ''}`}>
+          {isRakshak && <div className="absolute top-0 right-0 bg-[#00D4FF] text-[#0A2540] text-[10px] font-bold px-3 py-1 rounded-bl-xl uppercase">Current</div>}
           <h4 className="font-bold text-[#0A2540] text-lg mb-1 mt-2">Rakshak</h4>
           <p className="text-sm text-slate-500 mb-4">Perfect balance for daily riders. Covers rain and pollution.</p>
           <div className="flex justify-between items-center">
             <span className="font-bold text-lg">₹30 <span className="text-xs font-normal text-slate-500">/ week base</span></span>
-            <button className="bg-slate-100 hover:bg-slate-200 text-[#0A2540] font-semibold px-4 py-2 rounded-lg text-sm transition-colors cursor-not-allowed opacity-50">Current</button>
+            <button 
+              onClick={() => !isRakshak && !isMahakavach && onUpgrade('Rakshak')}
+              disabled={isRakshak || isMahakavach}
+              className={`font-semibold px-4 py-2 rounded-lg text-sm transition-colors ${isRakshak || isMahakavach ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-blue-100 hover:bg-blue-200 text-blue-700'}`}
+            >
+              {isRakshak || isMahakavach ? 'Active' : 'Upgrade Now'}
+            </button>
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-[#0A2540] to-[#0d3460] rounded-2xl p-5 shadow-lg border border-[#00D4FF]/30 text-white relative overflow-hidden">
+        <div className={`bg-gradient-to-br from-[#0A2540] to-[#0d3460] rounded-2xl p-5 shadow-lg border relative overflow-hidden ${isMahakavach ? 'border-green-400' : 'border-[#00D4FF]/30'}`}>
+           {isMahakavach && <div className="absolute top-0 right-0 bg-green-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl uppercase tracking-tighter">Active Protection</div>}
            <h4 className="font-bold text-white text-lg mb-1 flex items-center">Mahakavach <Shield className="ml-2 text-[#00D4FF]" size={16}/></h4>
            <p className="text-sm text-slate-300 mb-4">Peace of mind. Everything covered. All exclusions removed.</p>
            <div className="flex justify-between items-center">
-             <span className="font-bold text-lg">₹45 <span className="text-xs font-normal text-[#00D4FF]">/ week base</span></span>
-             <button className="bg-[#00D4FF] hover:bg-[#00B4DF] text-[#0A2540] font-bold px-4 py-2 rounded-lg text-sm transition-colors shadow-[0_0_15px_rgba(0,212,255,0.3)]">Upgrade Now</button>
+             <span className="font-bold text-lg text-white">₹45 <span className="text-xs font-normal text-[#00D4FF]">/ week base</span></span>
+             <button 
+                onClick={() => !isMahakavach && onUpgrade('Mahakavach')}
+                disabled={isMahakavach}
+                className={`font-bold px-4 py-2 rounded-lg text-sm transition-colors ${isMahakavach ? 'bg-green-500 text-white cursor-not-allowed' : 'bg-[#00D4FF] hover:bg-[#00B4DF] text-[#0A2540] shadow-[0_0_15px_rgba(0,212,255,0.3)]'}`}
+             >
+               {isMahakavach ? 'Current Plan' : 'Upgrade Now'}
+             </button>
            </div>
         </div>
       </div>

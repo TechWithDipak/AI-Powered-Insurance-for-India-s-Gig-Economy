@@ -1,21 +1,39 @@
+import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 import weatherData from '../../../data/weather.json';
 import disruptionData from '../../../data/disruption.json';
-import { supabase } from '../../../lib/supabase';
 import { calculatePayoutFactor } from '../../../lib/ai';
 
-export async function POST(request) {
-  const { userId, type } = await request.json();
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  let activePlan = 'Rakshak';
+export async function POST(request) {
+  const { userId, type: rawType } = await request.json();
+  
+  // Support aliases for legacy buttons or UI mismatches
+  const typeMap = { 'strike': 'curfew', 'waterlogging': 'flood' };
+  const type = typeMap[rawType] || rawType;
+
+  if (!supabaseServiceKey) {
+     return NextResponse.json({ success: false, error: 'Server config error: Service Key missing' }, { status: 500 });
+  }
+
+  const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+
+  let activePlan = 'None';
   let shiftTiming = 'Day';
 
-  // Securely fetch user constraints from Supabase
+  // Securely fetch user constraints from Supabase bypassing RLS
   if (userId && userId !== '00000000-0000-0000-0000-000000000000') {
-     const { data: profile } = await supabase.from('profiles').select('active_plan, shift_timing').eq('id', userId).single();
+     const { data: profile, error: profileError } = await supabaseAdmin
+        .from('profiles')
+        .select('active_plan, shift_timing')
+        .eq('id', userId)
+        .single();
+        
      if (profile) {
         activePlan = profile.active_plan;
-        shiftTiming = profile.shift_timing;
+        shiftTiming = profile.shift_timing || 'Day';
      }
   }
 
@@ -27,7 +45,9 @@ export async function POST(request) {
   };
 
   const allowedTriggers = planLimits[activePlan] || ['rain'];
+  
   if (!allowedTriggers.includes(type)) {
+     console.warn(`[Trigger Error] User plan ${activePlan} does not cover ${type}.`);
      return NextResponse.json({
        success: false,
        claim: {
@@ -51,11 +71,11 @@ export async function POST(request) {
     approved = true;
     baseAmount = 100;
     reason = "Severe AQI Auto-Claim";
-  } else if (type === 'curfew' || disruptionData.curfew) {
+  } else if (type === 'curfew' || type === 'strike' || disruptionData.curfew) {
     approved = true;
-    baseAmount = 200;
+    baseAmount = 500;
     reason = "Curfew/Strike Auto-Claim";
-  } else if (type === 'flood' || disruptionData.flood) {
+  } else if (type === 'flood' || type === 'waterlogging' || disruptionData.flood) {
     approved = true;
     baseAmount = 300;
     reason = "Water-logging / Flood Auto-Claim";
@@ -66,23 +86,22 @@ export async function POST(request) {
   }
 
   if (approved) {
-    // Dynamic Pricing ML Payout Modification based on Shift Risk
     const shiftMultiplier = calculatePayoutFactor(shiftTiming);
     const amount = Math.round(baseAmount * shiftMultiplier);
     
     // Add context to the reason for the UI
-    reason = `${reason} (${shiftTiming.split(' ')[0]} Shift Multiplier x${shiftMultiplier})`;
+    const finalReason = `[${activePlan}] ${reason} (${shiftTiming} Shift Multiplier x${shiftMultiplier})`;
 
     if (userId && userId !== '00000000-0000-0000-0000-000000000000') {
-      const { error: insertError } = await supabase.from('claims').insert([{
+      const { error: insertError } = await supabaseAdmin.from('claims').insert([{
         user_id: userId,
         status: 'APPROVED',
         amount,
-        reason
+        reason: finalReason
       }]);
       
       if (insertError) {
-         console.error('Failed to insert claim', insertError);
+         console.error('[Trigger API] Failed to insert claim:', insertError);
       }
     }
 
@@ -91,7 +110,7 @@ export async function POST(request) {
       claim: {
         status: 'APPROVED',
         amount,
-        reason
+        reason: finalReason
       }
     });
   }
