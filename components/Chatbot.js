@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Bot, X, CheckCircle, ShieldCheck, ChevronRight, RotateCcw } from 'lucide-react';
+import { Bot, X, CheckCircle, ShieldCheck, ChevronRight, RotateCcw, Zap } from 'lucide-react';
 
 export default function Chatbot({ visible, onClose, claimInfo, premiumInfo, activePlan, claims }) {
   const [selectedTopic, setSelectedTopic] = useState(null);
